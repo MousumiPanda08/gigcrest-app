@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Shield, Menu, X, Home, FileText, User, Settings, LogOut, DollarSign, ShieldCheck, TrendingUp, CheckCircle, Clock, XCircle, CloudRain, AlertTriangle, Users, Activity, BarChart3, Phone, Mail, MapPin, ChevronDown, Star } from 'lucide-react';
+import { Shield, Menu, X, Home, FileText, User, Settings, LogOut, DollarSign, ShieldCheck, TrendingUp, CheckCircle, Clock, CloudRain, AlertTriangle, Users, Activity, BarChart3, Phone, Mail, MapPin, ChevronDown, Star } from 'lucide-react';
 
 const GigCrestApp = () => {
   const [currentView, setCurrentView] = useState('landing');
