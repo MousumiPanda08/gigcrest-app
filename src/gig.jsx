@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Shield, Menu, X, Home, FileText, User, Settings, LogOut, DollarSign, ShieldCheck, TrendingUp, CheckCircle, Clock, XCircle, CloudRain, AlertTriangle, Users, Activity, BarChart3, Phone, Mail, MapPin, ChevronDown, Star } from 'lucide-react';
 
 const GigCrestApp = () => {
@@ -12,6 +12,15 @@ const GigCrestApp = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  // ✅ FIX 1: Move navItems inside useMemo to prevent unnecessary re-renders
+  const navItems = useMemo(() => [
+    { id: 'home', label: 'Home' },
+    { id: 'about', label: 'About Us' },
+    { id: 'testimonials', label: 'Testimonials' },
+    { id: 'faq', label: 'FAQ' },
+    { id: 'contact', label: 'Contact' }
+  ], []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -123,14 +132,6 @@ const GigCrestApp = () => {
     }
   ];
 
-  const navItems = [
-    { id: 'home', label: 'Home' },
-    { id: 'about', label: 'About Us' },
-    { id: 'testimonials', label: 'Testimonials' },
-    { id: 'faq', label: 'FAQ' },
-    { id: 'contact', label: 'Contact' }
-  ];
-
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -139,6 +140,7 @@ const GigCrestApp = () => {
     setIsMenuOpen(false);
   };
 
+  // ✅ FIX 2: Add navItems to dependency array
   useEffect(() => {
     if (currentView !== 'landing') return;
 
@@ -161,7 +163,7 @@ const GigCrestApp = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [currentView]);
+  }, [currentView, navItems]); // ✅ Added navItems here
 
   const handleContactSubmit = (e) => {
     e.preventDefault();
@@ -172,6 +174,33 @@ const GigCrestApp = () => {
       alert('Please fill in all fields.');
     }
   };
+
+  // ✅ FIX 3: Create a reusable NavButton component to replace <a> tags
+  const NavButton = ({ active, children, onClick, style }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px 14px',
+        borderRadius: '10px',
+        background: active ? 'rgba(255,255,255,0.1)' : 'transparent',
+        color: active ? 'white' : 'rgba(255,255,255,0.7)',
+        textDecoration: 'none',
+        fontWeight: 500,
+        cursor: 'pointer',
+        fontSize: '15px',
+        border: 'none',
+        width: '100%',
+        textAlign: 'left',
+        ...style
+      }}
+    >
+      {children}
+    </button>
+  );
 
   // Stat card component
   const StatCard = ({ icon, iconBg, iconColor, label, value, valueColor, border }) => (
@@ -206,17 +235,28 @@ const GigCrestApp = () => {
             <Shield size={22} />
             <span>GigCrest</span>
           </div>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
+          <button 
+            type="button"
+            onClick={() => setSidebarOpen(!sidebarOpen)} 
+            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}
+          >
             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && isMobile && (
-          <div onClick={() => setSidebarOpen(false)} style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.6)', zIndex: 998
-          }} />
+          <div 
+            onClick={() => setSidebarOpen(false)} 
+            onKeyDown={(e) => e.key === 'Escape' && setSidebarOpen(false)}
+            role="button"
+            tabIndex={0}
+            aria-label="Close sidebar"
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.6)', zIndex: 998
+            }} 
+          />
         )}
 
         {/* Sidebar */}
@@ -244,23 +284,23 @@ const GigCrestApp = () => {
             </div>
           )}
 
-          {/* Navigation */}
+          {/* ✅ FIX 3: Navigation - Changed <a> to <button> */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px' }}>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', color: 'white', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            <NavButton active={true}>
               <Home size={18} /> Dashboard
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <FileText size={18} /> My Claims
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <ShieldCheck size={18} /> My Plan
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <User size={18} /> Profile
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <Settings size={18} /> Settings
-            </a>
+            </NavButton>
           </nav>
 
           {/* Spacer */}
@@ -275,14 +315,18 @@ const GigCrestApp = () => {
             paddingBottom: '10px',
             marginTop: 'auto'
           }}>
-            <button onClick={() => { setCurrentView('landing'); setSidebarOpen(false); }} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              padding: '14px 16px', width: '100%',
-              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-              border: 'none', borderRadius: '10px',
-              color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '15px',
-              boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
-            }}>
+            <button 
+              type="button"
+              onClick={() => { setCurrentView('landing'); setSidebarOpen(false); }} 
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                padding: '14px 16px', width: '100%',
+                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                border: 'none', borderRadius: '10px',
+                color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '15px',
+                boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
+              }}
+            >
               <LogOut size={18} /> Back to Home
             </button>
           </div>
@@ -413,17 +457,28 @@ const GigCrestApp = () => {
             <Shield size={22} />
             <span>GigCrest Admin</span>
           </div>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}>
+          <button 
+            type="button"
+            onClick={() => setSidebarOpen(!sidebarOpen)} 
+            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', padding: '8px', borderRadius: '8px' }}
+          >
             {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && isMobile && (
-          <div onClick={() => setSidebarOpen(false)} style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.6)', zIndex: 998
-          }} />
+          <div 
+            onClick={() => setSidebarOpen(false)} 
+            onKeyDown={(e) => e.key === 'Escape' && setSidebarOpen(false)}
+            role="button"
+            tabIndex={0}
+            aria-label="Close sidebar"
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.6)', zIndex: 998
+            }} 
+          />
         )}
 
         {/* Sidebar */}
@@ -451,26 +506,26 @@ const GigCrestApp = () => {
             </div>
           )}
 
-          {/* Navigation */}
+          {/* ✅ FIX 3: Navigation - Changed <a> to <button> */}
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '20px' }}>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', color: 'white', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            <NavButton active={true}>
               <BarChart3 size={18} /> Analytics
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <Activity size={18} /> Live Events
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <AlertTriangle size={18} /> Fraud Detection
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <Users size={18} /> Workers
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <FileText size={18} /> Claims
-            </a>
-            <a style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px', borderRadius: '10px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, cursor: 'pointer', fontSize: '15px' }}>
+            </NavButton>
+            <NavButton active={false}>
               <Settings size={18} /> Settings
-            </a>
+            </NavButton>
           </nav>
 
           {/* Spacer */}
@@ -485,14 +540,18 @@ const GigCrestApp = () => {
             paddingBottom: '10px',
             marginTop: 'auto'
           }}>
-            <button onClick={() => { setCurrentView('landing'); setSidebarOpen(false); }} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              padding: '14px 16px', width: '100%',
-              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-              border: 'none', borderRadius: '10px',
-              color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '15px',
-              boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
-            }}>
+            <button 
+              type="button"
+              onClick={() => { setCurrentView('landing'); setSidebarOpen(false); }} 
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                padding: '14px 16px', width: '100%',
+                background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+                border: 'none', borderRadius: '10px',
+                color: 'white', fontWeight: 600, cursor: 'pointer', fontSize: '15px',
+                boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
+              }}
+            >
               <LogOut size={18} /> Back to Home
             </button>
           </div>
@@ -509,10 +568,14 @@ const GigCrestApp = () => {
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
             <h1 style={{ fontSize: isMobile ? '1.4rem' : '1.8rem', color: '#1a1a1a', fontWeight: 700 }}>Admin Dashboard</h1>
-            <button onClick={() => alert(`Event Simulation:\nZone: ${selectedZone}\nEvent: ${selectedEvent}\nSeverity: ${severity}\n\nGenerating claims, payouts, and fraud analysis...`)} style={{
-              padding: '10px 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
-            }}>
+            <button 
+              type="button"
+              onClick={() => alert(`Event Simulation:\nZone: ${selectedZone}\nEvent: ${selectedEvent}\nSeverity: ${severity}\n\nGenerating claims, payouts, and fraud analysis...`)} 
+              style={{
+                padding: '10px 20px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontSize: '14px'
+              }}
+            >
               🎮 Run Simulation
             </button>
           </div>
@@ -532,24 +595,39 @@ const GigCrestApp = () => {
             <p style={{ color: '#64748b', marginBottom: '18px', fontSize: '0.9rem' }}>Simulate real-world events to test system response</p>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '12px' }}>
               <div>
-                <label style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>Select Zone</label>
-                <select value={selectedZone} onChange={(e) => setSelectedZone(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}>
+                <label htmlFor="zone-select" style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>Select Zone</label>
+                <select 
+                  id="zone-select"
+                  value={selectedZone} 
+                  onChange={(e) => setSelectedZone(e.target.value)} 
+                  style={{ width: '100%', padding: '10px 12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}
+                >
                   <option>Zone A</option>
                   <option>Zone B</option>
                   <option>Zone C</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>Choose Event</label>
-                <select value={selectedEvent} onChange={(e) => setSelectedEvent(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}>
+                <label htmlFor="event-select" style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>Choose Event</label>
+                <select 
+                  id="event-select"
+                  value={selectedEvent} 
+                  onChange={(e) => setSelectedEvent(e.target.value)} 
+                  style={{ width: '100%', padding: '10px 12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}
+                >
                   <option value="rain">Heavy Rain</option>
                   <option value="heat">Heatwave</option>
                   <option value="aqi">Poor AQI</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>Set Severity</label>
-                <select value={severity} onChange={(e) => setSeverity(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}>
+                <label htmlFor="severity-select" style={{ fontWeight: 600, color: '#1a1a1a', fontSize: '0.85rem', marginBottom: '6px', display: 'block' }}>Set Severity</label>
+                <select 
+                  id="severity-select"
+                  value={severity} 
+                  onChange={(e) => setSeverity(e.target.value)} 
+                  style={{ width: '100%', padding: '10px 12px', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}
+                >
                   <option value="T1">T1 - Low</option>
                   <option value="T2">T2 - Medium</option>
                   <option value="T3">T3 - High</option>
@@ -557,10 +635,14 @@ const GigCrestApp = () => {
                 </select>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <button onClick={() => alert(`Simulation Running:\nZone: ${selectedZone}\nEvent: ${selectedEvent}\nSeverity: ${severity}\n\nGenerating claims, payouts, and fraud analysis...`)} style={{
-                  width: '100%', padding: '10px 20px', background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-                  color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer'
-                }}>
+                <button 
+                  type="button"
+                  onClick={() => alert(`Simulation Running:\nZone: ${selectedZone}\nEvent: ${selectedEvent}\nSeverity: ${severity}\n\nGenerating claims, payouts, and fraud analysis...`)} 
+                  style={{
+                    width: '100%', padding: '10px 20px', background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+                    color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer'
+                  }}
+                >
                   🚀 Run
                 </button>
               </div>
@@ -668,18 +750,23 @@ const GigCrestApp = () => {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
         boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => scrollToSection('home')}>
+        <button 
+          type="button"
+          onClick={() => scrollToSection('home')}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+        >
           <div style={{ width: '36px', height: '36px', background: '#2563eb', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
             <Shield size={20} />
           </div>
           <div style={{ fontSize: isMobile ? '20px' : '26px', fontWeight: 700, color: '#1a1a1a' }}>GigCrest</div>
-        </div>
+        </button>
 
         {/* Desktop Navigation */}
         {!isMobile && !isTablet && (
           <nav style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
             {navItems.map(item => (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
                 style={{
@@ -700,11 +787,15 @@ const GigCrestApp = () => {
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           {!isMobile && (
             <>
-              <button onClick={() => setCurrentView('worker')} style={{ padding: '9px 18px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}>Worker</button>
-              <button onClick={() => setCurrentView('admin')} style={{ padding: '9px 18px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}>Admin</button>
+              <button type="button" onClick={() => setCurrentView('worker')} style={{ padding: '9px 18px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}>Worker</button>
+              <button type="button" onClick={() => setCurrentView('admin')} style={{ padding: '9px 18px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', fontSize: '14px' }}>Admin</button>
             </>
           )}
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} style={{ display: isMobile || isTablet ? 'flex' : 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', alignItems: 'center', justifyContent: 'center' }}>
+          <button 
+            type="button"
+            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+            style={{ display: isMobile || isTablet ? 'flex' : 'none', background: 'none', border: 'none', cursor: 'pointer', padding: '6px', alignItems: 'center', justifyContent: 'center' }}
+          >
             {isMenuOpen ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
@@ -713,19 +804,31 @@ const GigCrestApp = () => {
       {/* Mobile/Tablet Slide-in Menu */}
       {isMenuOpen && (
         <>
-          <div onClick={() => setIsMenuOpen(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 998 }} />
+          <div 
+            onClick={() => setIsMenuOpen(false)} 
+            onKeyDown={(e) => e.key === 'Escape' && setIsMenuOpen(false)}
+            role="button"
+            tabIndex={0}
+            aria-label="Close menu"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', zIndex: 998 }} 
+          />
           <div style={{
             position: 'fixed', top: 0, right: 0, width: isMobile ? '100%' : '300px', height: '100vh',
             background: 'white', boxShadow: '-5px 0 30px rgba(0,0,0,0.15)', zIndex: 999,
             padding: '70px 20px 30px', display: 'flex', flexDirection: 'column', gap: '5px',
             overflowY: 'auto'
           }}>
-            <button onClick={() => setIsMenuOpen(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}>
+            <button 
+              type="button"
+              onClick={() => setIsMenuOpen(false)} 
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+            >
               <X size={28} />
             </button>
 
             {navItems.map(item => (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
                 style={{
@@ -739,8 +842,8 @@ const GigCrestApp = () => {
               </button>
             ))}
             <div style={{ borderTop: '1px solid #e2e8f0', margin: '15px 0' }} />
-            <button onClick={() => { setCurrentView('worker'); setIsMenuOpen(false); }} style={{ padding: '14px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}>Worker Dashboard</button>
-            <button onClick={() => { setCurrentView('admin'); setIsMenuOpen(false); }} style={{ padding: '14px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontSize: '15px', marginTop: '8px' }}>Admin Dashboard</button>
+            <button type="button" onClick={() => { setCurrentView('worker'); setIsMenuOpen(false); }} style={{ padding: '14px', background: '#2563eb', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontSize: '15px' }}>Worker Dashboard</button>
+            <button type="button" onClick={() => { setCurrentView('admin'); setIsMenuOpen(false); }} style={{ padding: '14px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 600, cursor: 'pointer', fontSize: '15px', marginTop: '8px' }}>Admin Dashboard</button>
           </div>
         </>
       )}
@@ -786,11 +889,15 @@ const GigCrestApp = () => {
           </div>
 
           <div style={{ padding: isMobile ? '0 20px 30px' : '0 30px 40px' }}>
-            <button onClick={() => setCurrentView('worker')} style={{
-              width: '100%', padding: isMobile ? '16px' : '20px', background: '#2563eb', color: 'white',
-              border: 'none', borderRadius: '50px', fontSize: isMobile ? '16px' : '18px', fontWeight: 700,
-              cursor: 'pointer', boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)'
-            }}>
+            <button 
+              type="button"
+              onClick={() => setCurrentView('worker')} 
+              style={{
+                width: '100%', padding: isMobile ? '16px' : '20px', background: '#2563eb', color: 'white',
+                border: 'none', borderRadius: '50px', fontSize: isMobile ? '16px' : '18px', fontWeight: 700,
+                cursor: 'pointer', boxShadow: '0 8px 25px rgba(37, 99, 235, 0.3)'
+              }}
+            >
               Register Now
             </button>
           </div>
@@ -806,7 +913,7 @@ const GigCrestApp = () => {
             <div>
               <h2 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: '#1a1a1a', marginBottom: '20px' }}>About GigCrest</h2>
               <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#64748b', lineHeight: 1.8, marginBottom: '20px' }}>
-                GigCrest was born from a simple observation: millions of gig workers in India lose income every day due to weather conditions beyond their control. We're here to change that.
+                GigCrest was born from a simple observation: millions of gig workers in India lose income every day due to weather conditions beyond their control. We&apos;re here to change that.
               </p>
               <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#64748b', lineHeight: 1.8, marginBottom: '30px' }}>
                 Our mission is to provide affordable, instant, and hassle-free insurance coverage to every gig economy worker in India.
@@ -841,7 +948,7 @@ const GigCrestApp = () => {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: isMobile ? '40px' : '60px' }}>
             <h2 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: '#1a1a1a', marginBottom: '15px' }}>What Our Workers Say</h2>
-            <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#64748b', maxWidth: '600px', margin: '0 auto' }}>Real stories from gig workers who've experienced the GigCrest difference.</p>
+            <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#64748b', maxWidth: '600px', margin: '0 auto' }}>Real stories from gig workers who&apos;ve experienced the GigCrest difference.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '25px' }}>
@@ -860,7 +967,7 @@ const GigCrestApp = () => {
                     <Star key={i} size={18} fill="#fbbf24" color="#fbbf24" />
                   ))}
                 </div>
-                <p style={{ fontSize: '15px', color: '#4a5568', lineHeight: 1.7, marginBottom: '22px', fontStyle: 'italic' }}>"{testimonial.text}"</p>
+                <p style={{ fontSize: '15px', color: '#4a5568', lineHeight: 1.7, marginBottom: '22px', fontStyle: 'italic' }}>&quot;{testimonial.text}&quot;</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: 'white', fontSize: '14px' }}>{testimonial.avatar}</div>
                   <div>
@@ -890,6 +997,7 @@ const GigCrestApp = () => {
                 transition: 'all 0.3s ease'
               }}>
                 <button
+                  type="button"
                   onClick={() => setOpenFAQ(openFAQ === index ? null : index)}
                   style={{
                     width: '100%', padding: isMobile ? '18px' : '22px 25px', background: 'none', border: 'none',
@@ -915,7 +1023,7 @@ const GigCrestApp = () => {
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '40px' : '60px', alignItems: 'start' }}>
             <div>
               <h2 style={{ fontSize: isMobile ? '28px' : '42px', fontWeight: 800, color: 'white', marginBottom: '20px' }}>Get In Touch</h2>
-              <p style={{ fontSize: isMobile ? '16px' : '18px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.7, marginBottom: '35px' }}>Have questions? We're here to help. Reach out to our team and we'll get back to you within 24 hours.</p>
+              <p style={{ fontSize: isMobile ? '16px' : '18px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.7, marginBottom: '35px' }}>Have questions? We&apos;re here to help. Reach out to our team and we&apos;ll get back to you within 24 hours.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {[
                   { icon: Phone, label: 'Phone', value: '+91 1800-GIG-HELP' },
@@ -939,18 +1047,44 @@ const GigCrestApp = () => {
               <h3 style={{ fontSize: '22px', fontWeight: 700, color: '#1a1a1a', marginBottom: '25px' }}>Send us a message</h3>
               <form onSubmit={handleContactSubmit}>
                 <div style={{ marginBottom: '18px' }}>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' }}>Your Name</label>
-                  <input type="text" value={contactForm.name} onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })} placeholder="Enter your name" style={{ width: '100%', padding: '14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                  <label htmlFor="name-input" style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' }}>Your Name</label>
+                  <input 
+                    id="name-input"
+                    type="text" 
+                    value={contactForm.name} 
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })} 
+                    placeholder="Enter your name" 
+                    style={{ width: '100%', padding: '14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} 
+                  />
                 </div>
                 <div style={{ marginBottom: '18px' }}>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' }}>Email Address</label>
-                  <input type="email" value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} placeholder="Enter your email" style={{ width: '100%', padding: '14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                  <label htmlFor="email-input" style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' }}>Email Address</label>
+                  <input 
+                    id="email-input"
+                    type="email" 
+                    value={contactForm.email} 
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} 
+                    placeholder="Enter your email" 
+                    style={{ width: '100%', padding: '14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} 
+                  />
                 </div>
                 <div style={{ marginBottom: '22px' }}>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' }}>Message</label>
-                  <textarea value={contactForm.message} onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })} placeholder="How can we help you?" rows={4} style={{ width: '100%', padding: '14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                  <label htmlFor="message-input" style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '6px' }}>Message</label>
+                  <textarea 
+                    id="message-input"
+                    value={contactForm.message} 
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })} 
+                    placeholder="How can we help you?" 
+                    rows={4} 
+                    style={{ width: '100%', padding: '14px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '15px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} 
+                  />
                 </div>
-                <button type="submit" style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 25px rgba(22, 163, 74, 0.3)' }}>Send Message</button>
+                <button 
+                  type="submit" 
+                  style={{ width: '100%', padding: '16px', background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 25px rgba(22, 163, 74, 0.3)' }}
+                >
+                  Send Message
+                </button>
               </form>
             </div>
           </div>
@@ -965,7 +1099,7 @@ const GigCrestApp = () => {
           </div>
           <div style={{ fontSize: '22px', fontWeight: 700, color: 'white' }}>GigCrest</div>
         </div>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>© 2025 GigCrest. All rights reserved. | Protecting India's Gig Workers</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>© 2025 GigCrest. All rights reserved. | Protecting India&apos;s Gig Workers</p>
       </footer>
     </div>
   );
